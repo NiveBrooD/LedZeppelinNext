@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Module 3. Lesson 9. Http protocol. Rest.</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <style>
+        ul#listData {
+            cursor: pointer;
+        }
+        ul#listData li:hover {
+            background-color: #d3edfc;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container" style=""></div>
+<div class="container">
+    <div class="header clearfix">
+        <nav>
+            <ul class="nav nav-pills float-right">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </nav>
+        <h3 class="text-muted">Led Zeppelin. Module 3. Lesson 9. Http protocol. Rest. Минималистичное демо чата. </h3>
+        <ul id="listData" class="list-group">
+            <li class="list-group-item">
+                <span class="badge">14</span>
+                Cras justo odio
+            </li>
+            <li class="list-group-item">
+                <span class="badge">2</span>
+                Dapibus ac facilisis in
+            </li>
+            <li class="list-group-item">
+                <span class="badge">1</span>
+                Morbi leo risus
+            </li>
+        </ul>
+    </div>
+    <form id="rest-form" class="form-horizontal">
+        <legend><br>Edit posts</legend>
+        <div class="row">
+
+            <!-- Form Name -->
+            <div class="col-md-2">
+                <label class="col-md-4 control-label" for="author">Author</label>
+            </div>
+
+            <div class="col-md-10">
+                <label class="col-md-4 control-label" for="message">Message</label>
+            </div>
+
+
+            <input id="id" name="id" type="hidden">
+            <div class="col-md-2">
+                <input id="author" name="author" type="text" placeholder="enter your name"
+                       class="form-control input-md" required="">
+            </div>
+            <div class="col-md-10">
+                <input id="message" name="message" type="text" placeholder="enter your text"
+                       class="form-control input-md" required="">
+            </div>
+
+
+        </div>
+    </form>
+    <hr>
+    <div class="row">
+
+        <!-- Button -->
+        <div class="col-md-1">
+            <button id="create" name="create" class="btn btn-info" onclick="createItem()">Create</button>
+        </div>
+        <div class="col-md-1">
+            <button id="edit" name="edit" class="btn btn-primary" onclick="updateItem()">Update</button>
+        </div>
+        <div class="col-md-1">
+            <button id="delete" name="delete" class="btn btn-danger" onclick="deleteItem()">Delete</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&nbsp;</p>
+        <p>© Company 2024</p>
+    </footer>
+
+</div> <!-- /container -->
+
+<script>
+    getAll();
+
+    function getAll() {
+        console.log("get all")
+        loadContent('messages/', function (data) {
+            let ulListData = document.getElementById("listData");
+            ulListData.innerHTML = ""; //clear listData
+            for (const key in data) {
+                ulListData.appendChild(newLiForListData(data[key]));
+            }
+        });
+    }
+
+    function newLiForListData(message) {
+        let span = document.createElement("span");
+        span.setAttribute("class", "badge");
+        span.innerText = message.id;
+
+        let li = document.createElement("li");
+        li.setAttribute("class", "list-group-item");
+        li.setAttribute("id", "message" + message.id);
+        li.innerText = `${message.author}: ${message.text}`;
+        li.appendChild(span);
+        li.addEventListener("click", () =>
+            loadContent('messages/' + message.id, message => fillForm(message))
+        );
+        console.dir(li);
+        return li;
+    }
+
+    function readMessage() {
+        let message = {
+            id: document.getElementById("id").value,
+            author: document.getElementById("author").value,
+            text: document.getElementById("message").value,
+        }
+        console.log("readMessage:")
+        console.dir(message);
+        if (message.id > -1 && message.text && message.author) {
+            return message
+        } else {
+            alert("Incorrect data in form");
+        }
+    }
+
+    function createItem() {
+        sendRequest("POST", "/messages/", readMessage())
+            .then(resp => getAll())
+            .catch(e => alert(e));
+    }
+
+    function updateItem() {
+        sendRequest("PUT", "/messages/", readMessage())
+            .then(resp => getAll())
+            .catch(resp => console.dir(resp));
+    }
+
+    function deleteItem() {
+        let message = readMessage();
+        sendRequest("DELETE", "/messages/"+message.id, )
+            .then(resp => getAll())
+            .catch(resp => console.dir(resp));
+    }
+
+    function fillForm(message) {
+        let form = document.getElementById("rest-form");
+        console.log(form)
+        console.log(message)
+        form.elements.id.value = message.id;
+        form.elements.message.value = message.text;
+        form.elements.author.value = message.author;
+        return true;
+    }
+
+    function loadContent(path, callback) {
+        //demo with XMLHttpRequest
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === 4) {
+                if (httpRequest.status === 200) {
+                    var data = JSON.parse(httpRequest.responseText);
+                    if (callback) {
+                        callback(data)
+                    }
+                }
+            }
+        };
+        httpRequest.open('GET', path);
+        httpRequest.send();
+    }
+
+    function sendRequest(method, url, body = null) {
+        //demo fetch request
+        return fetch(url, {
+            method: method,
+            body: JSON.stringify(body),
+            headers: {'Content-Type': 'application/json'}
+        }).then(response => response.ok
+            ? response.json()
+            : response.json().then(error => {
+                const e = new Error('request failed')
+                e.data = error
+                throw e
+            })
+        )
+    }
+</script>
+</body>
