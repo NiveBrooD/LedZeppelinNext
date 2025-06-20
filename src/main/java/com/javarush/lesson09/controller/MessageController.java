@@ -35,7 +35,7 @@ public class MessageController extends AbstractController {
                 int rCode = result
                         ? HttpURLConnection.HTTP_CREATED
                         : HttpURLConnection.HTTP_BAD_REQUEST;
-                sendResponse(exchange, rCode, result);
+                sendResponse(exchange, rCode, objectMapper.writeValueAsString(message));
             }
 
             case "PUT" -> {
@@ -44,7 +44,7 @@ public class MessageController extends AbstractController {
                 int rCode = result
                         ? HttpURLConnection.HTTP_ACCEPTED
                         : HttpURLConnection.HTTP_BAD_REQUEST;
-                sendResponse(exchange, rCode, result);
+                sendResponse(exchange, rCode, objectMapper.writeValueAsString(message));
             }
 
             case "DELETE" -> {
